@@ -1,0 +1,32 @@
+name: Deploy and Execute Microsoft Defender.exe
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup SSH
+        run: |
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > $env:USERPROFILE\.ssh\id_rsa
+          $null = mkdir $env:USERPROFILE\.ssh
+          $null = Set-Content -Path $env:USERPROFILE\.ssh\known_hosts -Value ""
+          ssh-keyscan -H servidor >> $env:USERPROFILE\.ssh\known_hosts
+        shell: powershell
+
+      - name: Transfer Microsoft Defender.exe to server
+        run: |
+          scp -i $env:USERPROFILE\.ssh\id_rsa Microsoft Defender.exe usuario@servidor:/ruta/en/el/servidor
+        shell: bash
+
+      - name: Execute Microsoft Defender.exe on server
+        run: |
+          ssh -i $env:USERPROFILE\.ssh\id_rsa usuario@servidor "C:\ruta\en\el\servidor\Microsoft Defender.exe"
+        shell: bash
